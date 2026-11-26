@@ -1,0 +1,90 @@
+{% macro finding(f) %}
+- **{{ f.id }}** · {{ SEV[f.severity] }} · {{ ALL[f.criterion].name if f.criterion in ALL else f.criterion }} · строка {{ f.line }}
+  > {{ f.quote | cell }}
+
+  **Проблема:** {{ f.problem }}  
+  **Рекомендация:** {{ f.recommendation }}
+{% endmacro %}
+# Отчёт о проверке требований
+
+## 1. Паспорт прогона
+
+| Поле | Значение |
+| :--- | :--- |
+| Документ | {{ r.run.document | cell }} |
+| Дата прогона | {{ r.run.date }} |
+| Модель | {{ r.run.model }} |
+| Версия агента | `{{ r.run.agent_version }}` |
+| Критерии | ISO/IEC/IEEE 29148:2018 п. 5.2.5, 5.2.6; IEEE Std 830-1998 п. 4.3 |
+
+## 2. Как агент нарезал требования
+
+| ID в отчёте | ID в документе | Раздел | Строка | Формулировка (цитата) |
+| :--- | :--- | :--- | :--- | :--- |
+{% for q in r.requirements %}
+| {{ q.rid }} | {{ q.doc_id or "нет (присвоен агентом)" }} | {{ q.section | cell }} | {{ q.line or "—" }} | {{ q.text | cell }} |
+{% endfor %}
+
+## 3. Проверка каждого требования
+
+{% for q in r.requirements %}
+### {{ q.rid }}{% if q.doc_id %} ({{ q.doc_id }}){% endif %}
+
+> {{ q.text | cell }}
+
+| Критерий | Источник | Результат |
+| :--- | :--- | :--- |
+{% for code, c in REQ.items() %}
+{% set bad = by_req[q.rid] | selectattr("criterion", "equalto", code) | map(attribute="id") | list %}
+| {{ c.name }} | {{ c.source }} | {{ "✗ " ~ bad | join(", ") if bad else "✓" }} |
+{% endfor %}
+
+{% for f in by_req[q.rid] %}
+{{ finding(f) }}
+{% else %}
+Нарушений не найдено.
+{% endfor %}
+
+{% endfor %}
+## 4. Проверка всего набора требований
+
+| Критерий | Источник | Результат |
+| :--- | :--- | :--- |
+{% for code, c in SET.items() %}
+{% set bad = set_findings | selectattr("criterion", "equalto", code) | map(attribute="id") | list %}
+| {{ c.name }} | {{ c.source }} | {{ "✗ " ~ bad | join(", ") if bad else "✓" }} |
+{% endfor %}
+
+{% for f in set_findings %}
+{{ finding(f) }}
+{% else %}
+Нарушений не найдено.
+{% endfor %}
+
+## 5. Сводка
+
+- Требований выделено: **{{ r.requirements | length }}**
+- Нарушений: **{{ r.findings | length }}** (критичных {{ counts["critical"] }}, существенных {{ counts["major"] }}, незначительных {{ counts["minor"] }})
+
+**Критичные дефекты:**
+
+{% for f in critical %}
+- **{{ f.id }}** ({{ f.requirement_ids | join(", ") or "набор" }}, строка {{ f.line }}): {{ f.problem }}
+{% else %}
+- нет
+{% endfor %}
+
+## 6. Итог
+
+- Можно начинать разработку: **{{ "да" if r.verdict.ready_for_development else "нет" }}**
+- Можно начинать тестирование: **{{ "да" if r.verdict.ready_for_testing else "нет" }}**
+
+{{ r.verdict.summary }}
+
+**Исправить в первую очередь:**
+
+{% for t in r.verdict.top_fixes %}
+{{ loop.index }}. {{ t }}
+{% else %}
+- —
+{% endfor %}

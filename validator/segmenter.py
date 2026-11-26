@@ -1,26 +1,33 @@
-"""Split a document into individual requirements.
+"""Split a document into individual requirements with the LLM."""
+import sys
+from typing import List, Optional
 
-STUB: picks only explicitly numbered lines (Ф-1, NFR-2, ...).
-TODO: LLM-based segmentation of every requirement statement (NFRs, data, integration,
-acceptance criteria, API rules and parameters) with our own R-NN IDs, the document's
-own ID in doc_id and a verbatim quote in text.
-"""
-import re
-from typing import List
+from pydantic import BaseModel
 
+from . import grounding, prompts
 from .llm import LLM
 from .models import Document, Requirement
 
-_ID_LINE = re.compile(r"^[\s*\-]*([А-ЯA-Z]{1,5}-\d+)[.)]?\**\s*(.+)$")
+
+class SegmentItem(BaseModel):
+    doc_id: Optional[str]
+    section: str
+    text: str
+
+
+class SegmentResponse(BaseModel):
+    requirements: List[SegmentItem]
 
 
 def segment(doc: Document, llm: LLM) -> List[Requirement]:
-    reqs, section = [], ""
-    for line in doc.lines:
-        if line.startswith("#"):
-            section = line.strip("# ").strip()
-        m = _ID_LINE.match(line)
-        if m:
-            reqs.append(Requirement(rid=f"R-{len(reqs) + 1:02d}", doc_id=m.group(1),
-                                    section=section, text=m.group(2).strip()))
+    resp = llm.ask(prompts.render("segment", document=doc.numbered()), SegmentResponse,
+                   system=prompts.render("system"))
+    reqs = []
+    for i, item in enumerate(resp.requirements, 1):
+        line = grounding.locate(doc, item.text)
+        if line is None:
+            # kept: losing a requirement is worse than a missing line number in the table
+            print(f"[segmenter] цитата требования не найдена в документе: {item.text[:80]!r}", file=sys.stderr)
+        reqs.append(Requirement(rid=f"R-{i:02d}", doc_id=item.doc_id, section=item.section,
+                                text=item.text, line=line))
     return reqs

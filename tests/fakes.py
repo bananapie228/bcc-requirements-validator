@@ -14,4 +14,5 @@ class FakeLLM:
 
     def ask(self, prompt, schema, system=""):
         self.prompts.append(prompt)
-        return self.responses[schema]
+        # fresh copy per call, like the real adapter: callers may mutate the result
+        return self.responses[schema].model_copy(deep=True)

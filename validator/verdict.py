@@ -1,19 +1,24 @@
-"""Final verdict: can development and testing start.
-
-STUB: "no critical findings -> ready". TODO: LLM verdict grounded in the findings
-(top_fixes must reference specific F-xxx IDs).
-"""
+"""Final verdict: can development and testing start from this document."""
 from typing import List
 
+from . import prompts
 from .llm import LLM
 from .models import Document, Finding, Requirement, Verdict
 
 
+def _format(findings: List[Finding]) -> str:
+    return "\n".join(
+        f"{f.id} [{f.severity}] {f.criterion} ({', '.join(f.requirement_ids) or 'set'}; line {f.line}): {f.problem}"
+        for f in findings
+    ) or "(no findings)"
+
+
 def decide(doc: Document, reqs: List[Requirement], findings: List[Finding], llm: LLM) -> Verdict:
-    critical = [f for f in findings if f.severity == "critical"]
-    return Verdict(
-        ready_for_development=not critical,
-        ready_for_testing=not critical,
-        summary=f"Критичных дефектов: {len(critical)}.",
-        top_fixes=[f"{f.id}: {f.problem}" for f in critical[:5]],
-    )
+    n_critical = sum(f.severity == "critical" for f in findings)
+    prompt = prompts.render("verdict", title=doc.title, n_requirements=str(len(reqs)),
+                            n_critical=str(n_critical), findings=_format(findings))
+    v = llm.ask(prompt, Verdict, system=prompts.render("system"))
+    if n_critical:
+        # hard rule, not left to the model: critical defects block the start of work
+        v.ready_for_development = v.ready_for_testing = False
+    return v

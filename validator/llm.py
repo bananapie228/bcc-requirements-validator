@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Protocol, Type, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -46,17 +46,23 @@ class Gemini:
             response_mime_type="application/json",
             response_schema=schema,
         )
-        for attempt in range(5):
+        attempts = 5
+        for attempt in range(attempts):
             try:
                 resp = self._client.models.generate_content(model=self.model, contents=prompt, config=cfg)
+                # text is None when the answer was blocked or cut off; truncated JSON fails validation
+                result = schema.model_validate_json(resp.text or "")
                 break
             except errors.APIError as e:
                 # 429 = free-tier rate limit, 5xx = overload; other errors won't be fixed by retrying
-                if e.code not in (429, 500, 503) or attempt == 4:
+                if e.code not in (429, 500, 503) or attempt == attempts - 1:
                     raise
                 time.sleep(20 * (attempt + 1))
+            except ValidationError:
+                if attempt == attempts - 1:
+                    raise SystemExit(f"Модель {self.model} {attempts} раз вернула пустой или неполный ответ "
+                                     f"для {schema.__name__}. Попробуйте другую модель (--model).")
 
-        result = schema.model_validate_json(resp.text)
         self._cache_dir.mkdir(parents=True, exist_ok=True)
         cache_file.write_text(result.model_dump_json(), encoding="utf-8")
         return result

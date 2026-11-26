@@ -27,8 +27,6 @@ def run(path: str, llm: LLM, on_stage: Callable[[str], None] = lambda s: None) -
 
     on_stage("Нарезка требований")
     reqs = segmenter.segment(doc, llm)
-    for q in reqs:
-        q.line = grounding.locate(doc, q.text)
 
     on_stage("Формальные проверки")
     findings = rules.check(doc, reqs)
@@ -38,7 +36,7 @@ def run(path: str, llm: LLM, on_stage: Callable[[str], None] = lambda s: None) -
     findings += set_level.check(doc, reqs, llm)
 
     on_stage("Проверка цитат")
-    findings = grounding.ground(doc, findings)
+    findings = grounding.dedup(grounding.ground(doc, findings, reqs))
     findings.sort(key=lambda f: (_SEV_ORDER[f.severity], f.line or 0))
     for i, f in enumerate(findings, 1):
         f.id = f"F-{i:03d}"

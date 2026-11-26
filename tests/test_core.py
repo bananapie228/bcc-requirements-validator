@@ -47,11 +47,44 @@ def test_ground_drops_unknown_criterion():
     assert grounding.ground(DOC, [f]) == []
 
 
-def test_pipeline_runs_without_network():
+def test_pipeline_end_to_end_with_fake_llm():
     from tests.fakes import FakeLLM
-    from validator import pipeline
+    from validator import pipeline, segmenter
+    from validator.models import FindingDraft, FindingList
 
-    rep = pipeline.run("docs/requirements.md", FakeLLM())
+    seg = segmenter.SegmentResponse(requirements=[segmenter.SegmentItem(
+        doc_id="Ф-3", section="Функциональные требования",
+        text="На карту приходится максимум один такой push за календарный месяц.")])
+    real = FindingDraft(requirement_ids=["R-01"], criterion="set_consistent", severity="critical",
+                        quote="максимум один такой push за календарный месяц", problem="p", recommendation="r")
+    invented = real.model_copy(update={"quote": "push отправляется дважды"})
+    llm = FakeLLM({
+        segmenter.SegmentResponse: seg,
+        FindingList: FindingList(findings=[real, invented]),
+        Verdict: Verdict(ready_for_development=True, ready_for_testing=True, summary="s", top_fixes=[]),
+    })
+
+    rep = pipeline.run("docs/requirements.md", llm)
+
     assert rep.run.model == "fake"
-    assert [f.id for f in rep.findings] == [f"F-{i:03d}" for i in range(1, len(rep.findings) + 1)]
-    assert report.render(rep)
+    assert [r.doc_id for r in rep.requirements] == ["Ф-3"]
+    # both passes get [real, invented]: per_req rejects the set-level criterion,
+    # grounding drops the invented quote, so one set finding survives
+    assert [(f.id, f.scope) for f in rep.findings] == [("F-001", "set")]
+    assert {f.quote for f in rep.findings} == {real.quote}
+    assert not rep.verdict.ready_for_development
+    assert "F-001" in report.render(rep)
+
+
+def test_locate_prefers_match_at_or_after_hint_line():
+    first = grounding.locate(DOC, "Да / Нет")
+    later = grounding.locate(DOC, "Да / Нет", near=first + 5)
+    assert later >= first + 5
+
+
+def test_dedup_drops_requirement_finding_already_reported_by_set_pass():
+    a = _finding("REST type")
+    a.line = 1
+    b = a.model_copy(update={"scope": "set", "criterion": "set_consistent", "requirement_ids": ["R-01", "R-02"]})
+    dup = a.model_copy()
+    assert grounding.dedup([a, b, dup]) == [b]

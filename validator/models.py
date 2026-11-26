@@ -38,6 +38,11 @@ class FindingDraft(BaseModel):
     recommendation: str
 
 
+class FindingList(BaseModel):
+    """LLM response schema for the review passes."""
+    findings: List[FindingDraft]
+
+
 class Finding(FindingDraft):
     """Pipeline finding: the LLM draft plus fields set by code, never by the LLM."""
     scope: Literal["requirement", "set"]

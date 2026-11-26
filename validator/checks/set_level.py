@@ -1,14 +1,15 @@
-"""LLM check of the whole requirement set against criteria.SET.
-
-STUB. TODO: contradictions between requirements, acceptance criteria and the API spec,
-gaps, traceability between linked documents, consistent terminology.
-Response schema: list of FindingDraft -> Finding(**d.model_dump(), scope="set").
-"""
+"""LLM review of the requirement set as a whole against criteria.SET."""
 from typing import List
 
+from .. import criteria, prompts
 from ..llm import LLM
-from ..models import Document, Finding, Requirement
+from ..models import Document, Finding, FindingList, Requirement
+from . import accept
+from .per_req import format_requirements
 
 
 def check(doc: Document, reqs: List[Requirement], llm: LLM) -> List[Finding]:
-    return []
+    prompt = prompts.render("set_level", criteria=criteria.as_prompt(criteria.SET),
+                            requirements=format_requirements(reqs), document=doc.numbered())
+    resp = llm.ask(prompt, FindingList, system=prompts.render("system"))
+    return accept(resp.findings, "set", {r.rid for r in reqs}, criteria.SET)

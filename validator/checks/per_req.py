@@ -1,7 +1,7 @@
-"""LLM-проверка каждого требования по criteria.REQUIREMENT.
+"""LLM check of each requirement against criteria.REQUIREMENT.
 
-ЗАГЛУШКА. Батчами по нескольку требований за вызов (лимиты бесплатного тарифа),
-llm.ask(prompt, schema=<модель со списком FindingDraft>) → Finding(**d.model_dump(), scope="requirement").
+STUB. TODO: batch several requirements per call (free-tier rate limits),
+llm.ask(prompt, schema=<model with a list of FindingDraft>) → Finding(**d.model_dump(), scope="requirement").
 """
 from typing import List
 

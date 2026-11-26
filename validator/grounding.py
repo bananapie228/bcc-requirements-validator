@@ -1,4 +1,4 @@
-"""Привязка цитат к строкам документа и отсев находок без реальной цитаты."""
+"""Anchor quotes to document lines and drop findings whose quote is not in the document."""
 import re
 import sys
 from bisect import bisect_right
@@ -12,12 +12,12 @@ def _norm(s: str) -> str:
     s = s.lower().replace("ё", "е")
     s = re.sub(r"[«»\"“”„]", '"', s)
     s = re.sub(r"[–—]", "-", s)
-    s = re.sub(r"[*`|#>]", " ", s)  # разметка markdown и таблиц
+    s = re.sub(r"[*`|#>]", " ", s)  # markdown and table markup
     return re.sub(r"\s+", " ", s).strip()
 
 
 def locate(doc: Document, quote: str) -> Optional[int]:
-    """Номер строки (с 1), с которой начинается цитата; None — цитаты в документе нет."""
+    """1-based line where the quote starts; None if the quote is not in the document."""
     q = _norm(quote)
     if not q:
         return None
@@ -32,7 +32,7 @@ def locate(doc: Document, quote: str) -> Optional[int]:
 
 
 def ground(doc: Document, findings: List[Finding]) -> List[Finding]:
-    """Оставляет только находки с известным критерием и реальной цитатой; проставляет line."""
+    """Keep only findings with a known criterion and a real quote; set their line."""
     kept = []
     for f in findings:
         f.line = locate(doc, f.quote)

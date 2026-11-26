@@ -1,5 +1,5 @@
-"""Шов к LLM. Модули получают объект LLM, а не создают клиента сами — так их можно тестировать
-без сети (см. tests/fakes.py)."""
+"""LLM seam. Modules receive an LLM object instead of building a client themselves,
+so they can be tested offline (see tests/fakes.py)."""
 import hashlib
 import json
 import time
@@ -15,17 +15,17 @@ class LLM(Protocol):
     model: str
 
     def ask(self, prompt: str, schema: Type[T], system: str = "") -> T:
-        """Ответ строго по pydantic-схеме. Ошибки сети/лимитов — внутри адаптера."""
+        """Return a response that matches the pydantic schema. Network/rate-limit errors are handled inside the adapter."""
         ...
 
 
 class Gemini:
-    """Адаптер Google Gemini: JSON-схема, temperature=0, повторы при 429/5xx, кэш на диске."""
+    """Google Gemini adapter: JSON schema, temperature=0, retries on 429/5xx, on-disk cache."""
 
     def __init__(self, model: str, api_key: str, cache_dir: Path = Path(".cache/llm"), use_cache: bool = True):
         if not api_key:
             raise SystemExit("Нет GEMINI_API_KEY: скопируйте .env.example в .env и вставьте ключ.")
-        from google import genai  # импорт тут: тесты и Streamlit без ключа не тянут SDK
+        from google import genai  # lazy import: tests and keyless runs don't load the SDK
 
         self.model = model
         self._client = genai.Client(api_key=api_key)
@@ -51,7 +51,7 @@ class Gemini:
                 resp = self._client.models.generate_content(model=self.model, contents=prompt, config=cfg)
                 break
             except errors.APIError as e:
-                # 429 — лимит бесплатного тарифа, 5xx — перегрузка; остальное повтором не лечится
+                # 429 = free-tier rate limit, 5xx = overload; other errors won't be fixed by retrying
                 if e.code not in (429, 500, 503) or attempt == 4:
                     raise
                 time.sleep(20 * (attempt + 1))

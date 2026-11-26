@@ -1,8 +1,7 @@
-"""Детерминированные проверки без LLM (source="rule").
+"""Deterministic checks without the LLM (source="rule").
 
-ЗАГЛУШКА. Что добавить: пустые разделы и поля таблиц, «—» вместо значения,
-«Да / Нет» без отметки, размытые слова (быстро, удобно, и т.п., при необходимости),
-смешение единиц (тиын/тенге), незаполненные версия/дата/согласующие.
+STUB. TODO: empty sections and table fields, "—" instead of a value, unticked
+"Да / Нет" checklists, vague words, mixed units, missing version/date/approvers.
 """
 from typing import List
 

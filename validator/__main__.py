@@ -1,4 +1,4 @@
-"""python -m validator <документ> <отчёт.md> [--model ID] [--no-cache]"""
+"""python -m validator <document> <report.md> [--model ID] [--no-cache]"""
 import argparse
 import sys
 from pathlib import Path

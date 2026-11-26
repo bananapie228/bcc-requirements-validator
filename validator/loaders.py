@@ -1,4 +1,4 @@
-"""Чтение документа в строки."""
+"""Read an input document (PDF/DOCX/MD/TXT) into lines."""
 from pathlib import Path
 
 from .models import Document
@@ -18,7 +18,7 @@ def _read_docx(path: Path) -> str:
 
     d = docx.Document(str(path))
     out = []
-    for el in d.element.body.iterchildren():  # абзацы и таблицы в порядке документа
+    for el in d.element.body.iterchildren():  # paragraphs and tables in document order
         if el.tag.endswith("}p"):
             out.append(Paragraph(el, d).text)
         elif el.tag.endswith("}tbl"):

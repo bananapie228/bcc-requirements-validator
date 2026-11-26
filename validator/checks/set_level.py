@@ -1,8 +1,8 @@
-"""LLM-проверка набора по criteria.SET.
+"""LLM check of the whole requirement set against criteria.SET.
 
-ЗАГЛУШКА. Противоречия между требованиями, критериями приёмки и API (часть B),
-пропуски, трассируемость A↔B, единообразие терминов.
-Схема ответа — список FindingDraft → Finding(**d.model_dump(), scope="set").
+STUB. TODO: contradictions between requirements, acceptance criteria and the API spec,
+gaps, traceability between linked documents, consistent terminology.
+Response schema: list of FindingDraft -> Finding(**d.model_dump(), scope="set").
 """
 from typing import List
 

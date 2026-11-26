@@ -1,8 +1,9 @@
-"""Нарезка документа на требования.
+"""Split a document into individual requirements.
 
-ЗАГЛУШКА: берёт только явно пронумерованные строки (Ф-1, NFR-2 ...).
-Заменить на LLM: все утверждения-требования (NFR, данные, интеграция, критерии приёмки,
-правила и параметры API), свои ID R-NN, doc_id из документа, дословная цитата в text.
+STUB: picks only explicitly numbered lines (Ф-1, NFR-2, ...).
+TODO: LLM-based segmentation of every requirement statement (NFRs, data, integration,
+acceptance criteria, API rules and parameters) with our own R-NN IDs, the document's
+own ID in doc_id and a verbatim quote in text.
 """
 import re
 from typing import List

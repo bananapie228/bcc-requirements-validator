@@ -1,4 +1,6 @@
-"""Критерии качества: ISO/IEC/IEEE 29148:2018 (5.2.5, 5.2.6) и IEEE Std 830-1998 (4.3)."""
+"""Quality criteria: ISO/IEC/IEEE 29148:2018 (5.2.5, 5.2.6) and IEEE Std 830-1998 (4.3).
+
+Names and descriptions stay in Russian: they go into prompts and the Russian report."""
 from typing import Dict, NamedTuple
 
 
@@ -8,7 +10,7 @@ class Criterion(NamedTuple):
     description: str
 
 
-# Свойства отдельного требования
+# Characteristics of an individual requirement
 REQUIREMENT: Dict[str, Criterion] = {
     "necessary": Criterion("Необходимость", "29148 §5.2.5",
                            "Без требования теряется нужная возможность; нет дублей и лишнего."),
@@ -30,7 +32,7 @@ REQUIREMENT: Dict[str, Criterion] = {
                             "Оформлено по принятому шаблону/стилю: ID, обязательные поля заполнены."),
 }
 
-# Свойства набора требований (спецификации)
+# Characteristics of a set of requirements (the specification)
 SET: Dict[str, Criterion] = {
     "set_complete": Criterion("Полнота набора", "29148 §5.2.6; IEEE 830 §4.3.3",
                               "Покрыты все функции, данные, интерфейсы, ошибки, NFR; нет пустых разделов."),
@@ -54,5 +56,5 @@ ALL: Dict[str, Criterion] = {**REQUIREMENT, **SET}
 
 
 def as_prompt(criteria: Dict[str, Criterion]) -> str:
-    """Список критериев для вставки в промпт."""
+    """Criteria list formatted for a prompt."""
     return "\n".join(f"- {code} — {c.name} ({c.source}): {c.description}" for code, c in criteria.items())

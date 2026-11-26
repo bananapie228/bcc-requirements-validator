@@ -1,4 +1,4 @@
-"""Отчёт в Markdown из Report."""
+"""Render a Report to Markdown (the report itself is in Russian)."""
 from collections import Counter
 from pathlib import Path
 

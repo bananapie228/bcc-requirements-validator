@@ -1,4 +1,4 @@
-"""Оркестрация прогона. Общий вход для CLI и Streamlit."""
+"""Run orchestration. Single entry point shared by the CLI and the web demo."""
 import subprocess
 from datetime import datetime
 from pathlib import Path

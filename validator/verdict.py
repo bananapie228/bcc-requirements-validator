@@ -1,7 +1,7 @@
-"""Итоговое заключение.
+"""Final verdict: can development and testing start.
 
-ЗАГЛУШКА: правило «нет критичных — можно начинать». Заменить на LLM-заключение
-с опорой на находки (top_fixes — конкретные пункты со ссылками на F-xxx).
+STUB: "no critical findings -> ready". TODO: LLM verdict grounded in the findings
+(top_fixes must reference specific F-xxx IDs).
 """
 from typing import List
 

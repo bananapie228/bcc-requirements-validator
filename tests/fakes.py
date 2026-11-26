@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class FakeLLM:
-    """Тестовый адаптер шва LLM: на каждую схему ответа — заранее заданный ответ."""
+    """Test adapter for the LLM seam: returns a canned response per response schema."""
 
     model = "fake"
 

@@ -55,3 +55,7 @@ Thumbs.db
 
 # Внутренние заметки команды (план, распределение) — не для жюри
 team/
+
+# Trial runs: logs and per-model reports (only reports/report.md is submitted)
+reports/*.log
+reports/*/

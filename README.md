@@ -19,6 +19,9 @@ python -m validator docs/requirements.md reports/report.md
 **Ключ LLM.** Откройте https://aistudio.google.com/ → Get API key → создайте ключ (хватит бесплатного тарифа).
 Вставьте его в `.env` в строку `GEMINI_API_KEY=`. Модель задаётся там же (`GEMINI_MODEL`) или флагом `--model`.
 
+Если основная модель перегружена или недоступна ключу, агент сам переключается на запасные из
+`GEMINI_FALLBACK_MODELS`. В паспорт отчёта записывается модель, которая на самом деле ответила.
+
 **Результат.** Отчёт в Markdown ляжет в указанный путь (`reports/report.md`), рядом — `report.json` с теми же данными.
 
 **Форматы входа:** PDF, DOCX, MD, TXT.

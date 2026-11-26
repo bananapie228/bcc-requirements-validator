@@ -88,3 +88,9 @@ def test_dedup_drops_requirement_finding_already_reported_by_set_pass():
     b = a.model_copy(update={"scope": "set", "criterion": "set_consistent", "requirement_ids": ["R-01", "R-02"]})
     dup = a.model_copy()
     assert grounding.dedup([a, b, dup]) == [b]
+
+
+def test_dedup_collapses_set_findings_on_same_place_across_criteria():
+    a = _finding("REST type").model_copy(update={"scope": "set", "criterion": "set_consistent", "line": 1})
+    b = a.model_copy(update={"criterion": "traceable"})
+    assert grounding.dedup([a, b]) == [a]

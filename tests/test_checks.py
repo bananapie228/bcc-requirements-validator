@@ -30,13 +30,20 @@ def test_per_req_drops_findings_about_requirements_outside_the_batch():
     assert [f.requirement_ids for f in findings] == [["R-01"]]
 
 
-def test_set_level_is_one_call_and_keeps_document_level_findings():
+def test_set_level_runs_consistency_and_completeness_passes():
     llm = FakeLLM({FindingList: FindingList(findings=[_draft([], "set_complete"), _draft(["R-02", "R-99"], "set_consistent")])})
     findings = set_level.check(DOC, _reqs(3), llm)
 
-    assert len(llm.prompts) == 1
-    assert [f.requirement_ids for f in findings] == [[], ["R-02"]]
+    assert len(llm.prompts) == 2
+    assert "acceptance criterion" in llm.prompts[0] and "placeholder" in llm.prompts[1]
+    # each pass keeps only its own criteria
+    assert [(f.criterion, f.requirement_ids) for f in findings] == [("set_consistent", ["R-02"]), ("set_complete", [])]
     assert {f.scope for f in findings} == {"set"}
+
+
+def test_requirement_headers_keep_line_numbers_out_of_the_quotable_text():
+    text = per_req.format_requirements([Requirement(rid="R-01", doc_id="Ф-1", section="S", text="t1", line=37)])
+    assert text.splitlines()[-1] == "text: t1"
 
 
 def test_passes_drop_criteria_from_the_other_family():

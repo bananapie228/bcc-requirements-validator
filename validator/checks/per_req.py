@@ -6,14 +6,17 @@ from ..llm import LLM
 from ..models import Document, Finding, FindingList, Requirement
 from . import accept
 
-# Requirements per LLM call: fewer calls for free-tier rate limits, small enough to stay thorough.
-BATCH_SIZE = 8
+# Requirements per LLM call. Each call resends the whole document and a thinking model takes minutes
+# per call, so fewer, larger batches cut run time; 25 still leaves the model room to be thorough.
+BATCH_SIZE = 25
 
 
 def format_requirements(reqs: List[Requirement]) -> str:
-    return "\n".join(
-        f"{r.rid}" + (f" [{r.doc_id}]" if r.doc_id else "")
-        + f" ({r.section}" + (f", line {r.line}" if r.line else "") + f"): {r.text}"
+    """One block per requirement; the header is metadata, only the `text:` line is document text."""
+    return "\n\n".join(
+        f"### {r.rid}\n"
+        f"document ID: {r.doc_id or 'none'} | section: {r.section} | line: {r.line or 'unknown'}\n"
+        f"text: {r.text}"
         for r in reqs
     )
 

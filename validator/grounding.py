@@ -63,7 +63,9 @@ def dedup(findings: List[Finding]) -> List[Finding]:
     set_cover = [(f.line, _norm(f.quote), set(f.requirement_ids)) for f in findings if f.scope == "set"]
     seen, out = set(), []
     for f in findings:
-        key = (f.scope, f.criterion, f.line, _norm(f.quote), tuple(sorted(f.requirement_ids)))
+        # set passes overlap (consistency vs completeness): the same place is one issue whatever the criterion
+        key = ((f.scope, f.line, _norm(f.quote)) if f.scope == "set"
+               else (f.scope, f.criterion, f.line, _norm(f.quote), tuple(sorted(f.requirement_ids))))
         covered = f.scope == "requirement" and any(
             line == f.line and quote == _norm(f.quote) and rids & set(f.requirement_ids)
             for line, quote, rids in set_cover)

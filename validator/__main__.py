@@ -14,7 +14,7 @@ def main() -> None:
     ap.add_argument("--model", default=config.MODEL, help=f"ID модели Gemini (по умолчанию {config.MODEL})")
     ap.add_argument("--no-cache", action="store_true", help="не брать ответы LLM из кэша")
     a = ap.parse_args()
-    llm = Gemini(a.model, config.API_KEY, use_cache=not a.no_cache)
+    llm = Gemini(a.model, config.API_KEY, use_cache=not a.no_cache, fallbacks=config.FALLBACK_MODELS)
 
     rep = pipeline.run(a.input, llm, on_stage=lambda s: print(f"→ {s}", file=sys.stderr))
     out = Path(a.output)

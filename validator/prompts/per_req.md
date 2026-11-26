@@ -9,13 +9,13 @@ For every violated criterion return one finding:
 - requirement_ids: [the rid of the requirement] — only rids from the BATCH;
 - criterion: exactly one code from the list above;
 - severity: "critical" — blocks development or testing (cannot be implemented or verified as written, essential behaviour missing, factually wrong); "major" — different people would likely implement or test it differently; "minor" — wording or template issue with low risk;
-- quote: a verbatim fragment of the document that shows the defect — at least 3 words (unless it is a single code, number or identifier), long enough to be unique in the document;
+- quote: a verbatim fragment of the DOCUMENT text (never of the BATCH header lines) that shows the defect — at least 3 words (unless it is a single code, number or identifier), long enough to be unique in the document;
 - problem: what exactly is wrong and why (1–3 sentences, Russian);
 - recommendation: a concrete rewrite or the specific missing information to add (Russian).
 
 Do not mark a criterion as violated without evidence in the text. A requirement without defects gets no findings.
 
-BATCH:
+BATCH (header lines are metadata; only "text:" lines are document text):
 {batch}
 
 DOCUMENT:

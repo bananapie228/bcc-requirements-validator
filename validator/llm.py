@@ -13,8 +13,9 @@ T = TypeVar("T", bound=BaseModel)
 # Per request. Sent to the server as its deadline too (X-Server-Timeout): segmenting a whole
 # document on a thinking model took over 180 s, so keep this generous.
 TIMEOUT_S = 600
-ATTEMPTS_PER_MODEL = 3
-BACKOFF_S = 15
+# Overload (503) comes in waves of several minutes: wait it out (30+60+90+120 s) before falling back.
+ATTEMPTS_PER_MODEL = 5
+BACKOFF_S = 30
 
 
 class LLM(Protocol):

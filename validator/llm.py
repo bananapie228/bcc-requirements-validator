@@ -2,8 +2,10 @@
 so they can be tested offline (see tests/fakes.py)."""
 import hashlib
 import json
+import logging
 import sys
 import time
+import warnings
 from pathlib import Path
 from typing import List, Optional, Protocol, Sequence, Type, TypeVar
 
@@ -34,8 +36,13 @@ class Gemini:
                  fallbacks: Sequence[str] = ()):
         if not api_key:
             raise SystemExit("Нет GEMINI_API_KEY: скопируйте .env.example в .env и вставьте ключ.")
-        from google import genai  # lazy import: tests and keyless runs don't load the SDK
-        from google.genai import types
+        with warnings.catch_warnings():
+            # import-time noise on older Pythons (end-of-life, LibreSSL) the user can't act on mid-run
+            warnings.simplefilter("ignore")
+            from google import genai  # lazy import: tests and keyless runs don't load the SDK
+            from google.genai import types
+        # thinking models attach a thought signature to every answer; the SDK warns about it each time
+        logging.getLogger("google_genai.types").setLevel(logging.ERROR)
 
         self._models = [model] + [m for m in fallbacks if m != model]
         self._used: List[str] = []

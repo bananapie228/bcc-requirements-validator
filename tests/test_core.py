@@ -94,3 +94,37 @@ def test_dedup_collapses_set_findings_on_same_place_across_criteria():
     a = _finding("REST type").model_copy(update={"scope": "set", "criterion": "set_consistent", "line": 1})
     b = a.model_copy(update={"criterion": "traceable"})
     assert grounding.dedup([a, b]) == [a]
+
+
+def test_dedup_collapses_one_contradiction_quoted_from_both_sides():
+    a = _finding("REST type").model_copy(update={"scope": "set", "criterion": "set_consistent", "line": 1,
+                                                  "requirement_ids": ["R-05", "R-13"]})
+    b = a.model_copy(update={"quote": "Authorization", "line": 2, "requirement_ids": ["R-13", "R-05"]})
+    unrelated_gap = a.model_copy(update={"criterion": "set_complete", "requirement_ids": [], "quote": "Swagger", "line": 3})
+    assert grounding.dedup([a, b, unrelated_gap]) == [a, unrelated_gap]
+
+
+def test_pipeline_keeps_the_more_severe_of_duplicate_set_findings():
+    from tests.fakes import FakeLLM
+    from validator import pipeline, segmenter
+    from validator.checks import set_level
+    from validator.models import FindingDraft, FindingList
+
+    seg = segmenter.SegmentResponse(requirements=[segmenter.SegmentItem(
+        doc_id="Ф-3", section="S", text="На карту приходится максимум один такой push за календарный месяц.")])
+    minor = FindingDraft(requirement_ids=["R-01"], criterion="set_consistent", severity="minor",
+                         quote="максимум один такой push", problem="minor one", recommendation="r")
+    critical = minor.model_copy(update={"severity": "critical", "quote": "за календарный месяц", "problem": "critical one"})
+
+    class PerPass(FakeLLM):  # consistency pass says minor, interactions pass says critical
+        def ask(self, prompt, schema, system=""):
+            if schema is FindingList:
+                self.prompts.append(prompt)
+                drafts = [critical] if "scenario" in prompt else [minor] if "acceptance criterion" in prompt else []
+                return FindingList(findings=drafts)
+            return super().ask(prompt, schema, system)
+
+    llm = PerPass({segmenter.SegmentResponse: seg,
+                   Verdict: Verdict(ready_for_development=True, ready_for_testing=True, summary="s", top_fixes=[])})
+    rep = pipeline.run("docs/requirements.md", llm)
+    assert [f.problem for f in rep.findings] == ["critical one"]

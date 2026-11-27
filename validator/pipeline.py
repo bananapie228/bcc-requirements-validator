@@ -36,8 +36,10 @@ def run(path: str, llm: LLM, on_stage: Callable[[str], None] = lambda s: None) -
     findings += set_level.check(doc, reqs, llm)
 
     on_stage("Проверка цитат")
-    findings = grounding.dedup(grounding.ground(doc, findings, reqs))
+    findings = grounding.ground(doc, findings, reqs)
+    # sort before dedup: of two duplicates the first is kept, and it must be the more severe one
     findings.sort(key=lambda f: (_SEV_ORDER[f.severity], f.line or 0))
+    findings = grounding.dedup(findings)
     for i, f in enumerate(findings, 1):
         f.id = f"F-{i:03d}"
 

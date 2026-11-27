@@ -14,6 +14,9 @@ from .per_req import format_requirements
 # pass name (= prompt template) -> criteria it may report
 PASSES = {
     "set_consistency": ["set_consistent", "set_feasible", "set_comprehensible"],
+    # scenario walk-through of requirements on the same behaviour: weaker models miss these
+    # conflicts unless asked for them on their own
+    "set_interactions": ["set_consistent", "set_feasible"],
     "set_completeness": ["set_complete", "set_validatable", "traceable", "ranked", "modifiable"],
 }
 

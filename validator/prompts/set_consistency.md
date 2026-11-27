@@ -3,11 +3,11 @@ Check the requirement set for CONTRADICTIONS and inconsistencies, against these 
 
 Work through these steps one by one and do not skip any:
 1. For every acceptance criterion, test case or worked example in the document: take its preconditions and action, apply the requirements literally to derive the expected result, and compare it with the stated expected result. Any mismatch is a critical contradiction.
-2. For every group of requirements that govern the same behaviour (same trigger, same data, same limit or counter): check that all of them can be satisfied at the same time in every scenario, including after a setting or state changes in the middle of a period.
-3. Compare goals and purpose statements with what the requirements actually specify (timing, scope, guarantees).
-4. Compare the main specification with linked or child specifications: operations that exist, HTTP methods, status codes and their meaning, field names, types, units and formats.
-5. Compare units, currencies, data types and formats used for the same quantity in different sections.
-6. Check that the same component, entity or value is named the same way everywhere.
+2. Compare goals and purpose statements with what the requirements actually specify (timing, scope, guarantees).
+3. Compare the main specification with linked or child specifications: operations that exist, HTTP methods, status codes and their meaning, field names, types, units and formats.
+4. Compare units, currencies, data types and formats used for the same quantity in different sections.
+5. Check that the same component, entity or value is named the same way everywhere.
+(Conflicts between requirements that govern the same behaviour are checked in a separate pass.)
 
 For each issue return one finding:
 - requirement_ids: rids of all requirements involved; empty for document-level issues;

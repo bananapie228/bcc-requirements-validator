@@ -6,9 +6,9 @@ from ..llm import LLM
 from ..models import Document, Finding, FindingList, Requirement
 from . import accept
 
-# Requirements per LLM call. Each call resends the whole document and a thinking model takes minutes
-# per call, so fewer, larger batches cut run time; 25 still leaves the model room to be thorough.
-BATCH_SIZE = 25
+# Requirements per LLM call. Measured on the case document with gemini-3.6-flash: batches of 25
+# gave ~10 requirement findings, batches of 8 gave 24 — the model skims large batches.
+BATCH_SIZE = 8
 
 
 def format_requirements(reqs: List[Requirement]) -> str:

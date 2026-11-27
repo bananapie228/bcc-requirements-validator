@@ -30,14 +30,16 @@ def test_per_req_drops_findings_about_requirements_outside_the_batch():
     assert [f.requirement_ids for f in findings] == [["R-01"]]
 
 
-def test_set_level_runs_consistency_and_completeness_passes():
+def test_set_level_runs_consistency_interactions_and_completeness_passes():
     llm = FakeLLM({FindingList: FindingList(findings=[_draft([], "set_complete"), _draft(["R-02", "R-99"], "set_consistent")])})
     findings = set_level.check(DOC, _reqs(3), llm)
 
-    assert len(llm.prompts) == 2
-    assert "acceptance criterion" in llm.prompts[0] and "placeholder" in llm.prompts[1]
+    assert len(llm.prompts) == 3
+    assert "acceptance criterion" in llm.prompts[0]
+    assert "scenario" in llm.prompts[1] and "placeholder" in llm.prompts[2]
     # each pass keeps only its own criteria
-    assert [(f.criterion, f.requirement_ids) for f in findings] == [("set_consistent", ["R-02"]), ("set_complete", [])]
+    assert [(f.criterion, f.requirement_ids) for f in findings] == [
+        ("set_consistent", ["R-02"]), ("set_consistent", ["R-02"]), ("set_complete", [])]
     assert {f.scope for f in findings} == {"set"}
 
 
@@ -49,4 +51,5 @@ def test_requirement_headers_keep_line_numbers_out_of_the_quotable_text():
 def test_passes_drop_criteria_from_the_other_family():
     llm = FakeLLM({FindingList: FindingList(findings=[_draft(["R-01"], "set_consistent"), _draft(["R-01"], "complete")])})
     assert [f.criterion for f in per_req.check(DOC, _reqs(1), llm)] == ["complete"]
-    assert [f.criterion for f in set_level.check(DOC, _reqs(1), llm)] == ["set_consistent"]
+    # consistency and interactions passes both report it; pipeline dedup collapses the repeat
+    assert [f.criterion for f in set_level.check(DOC, _reqs(1), llm)] == ["set_consistent", "set_consistent"]

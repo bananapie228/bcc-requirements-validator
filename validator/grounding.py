@@ -66,11 +66,13 @@ def dedup(findings: List[Finding]) -> List[Finding]:
         # set passes overlap (consistency vs completeness): the same place is one issue whatever the criterion
         key = ((f.scope, f.line, _norm(f.quote)) if f.scope == "set"
                else (f.scope, f.criterion, f.line, _norm(f.quote), tuple(sorted(f.requirement_ids))))
+        # one contradiction is often quoted from each of its two sides by different passes
+        pair_key = (f.criterion, frozenset(f.requirement_ids)) if f.scope == "set" and f.requirement_ids else None
         covered = f.scope == "requirement" and any(
             line == f.line and quote == _norm(f.quote) and rids & set(f.requirement_ids)
             for line, quote, rids in set_cover)
-        if key in seen or covered:
+        if key in seen or pair_key in seen or covered:
             continue
-        seen.add(key)
+        seen.update(k for k in (key, pair_key) if k)
         out.append(f)
     return out

@@ -1,9 +1,9 @@
 {
   "run": {
     "document": "Уведомление о расходах по карте (requirements.md)",
-    "date": "2026-11-27 13:14",
+    "date": "2026-11-27 22:34",
     "model": "gemini-3.6-flash",
-    "agent_version": "8ebd888"
+    "agent_version": "v1.0"
   },
   "requirements": [
     {

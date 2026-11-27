@@ -88,3 +88,20 @@ def test_bad_request_from_one_model_moves_on_but_bad_key_stops(tmp_path, monkeyp
     g._client.models.generate_content = bad_key
     with pytest.raises(errors.ClientError):
         g.ask("p2", Verdict)
+
+
+def test_daily_quota_exhaustion_moves_on_without_waiting(tmp_path, monkeypatch):
+    g = _gemini(tmp_path, set(), monkeypatch)
+    real = g._client.models.generate_content
+    main_attempts = []
+
+    def daily_quota_on_main(model, contents, config):
+        if model == "main":
+            main_attempts.append(model)
+            raise errors.ClientError(429, {"error": {"code": 429, "message": "quota", "status": "RESOURCE_EXHAUSTED",
+                "details": [{"violations": [{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}]}})
+        return real(model=model, contents=contents, config=config)
+    g._client.models.generate_content = daily_quota_on_main
+    g.ask("p", Verdict)
+    assert main_attempts == ["main"]  # no retries: a daily quota won't recover within the run
+    assert g.model == "spare"

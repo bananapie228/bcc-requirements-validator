@@ -107,8 +107,9 @@ class Gemini:
                 return result
             except errors.APIError as e:
                 print(f"[llm] ошибка API {e.code}: {str(e)[:120]}", file=sys.stderr, flush=True)
-                if e.code in (400, 404):
-                    # this model rejects the request or is retired for this key: retrying won't help, the next may
+                if e.code in (400, 404) or (e.code == 429 and "PerDay" in str(e.details)):
+                    # rejected request, retired model or daily quota (free tier: 20 requests/day per model):
+                    # retrying won't help within this run, the next model may
                     return None
                 # 429 = quota, 5xx = overload or server deadline; 401/403 = bad key, stop right away
                 if e.code not in (429, 500, 503, 504):

@@ -61,4 +61,6 @@ python -m validator docs/requirements.md reports/report.md
 pytest -q
 ```
 
-Архитектурные решения: [docs/adr/0001-pipeline-architecture.md](docs/adr/0001-pipeline-architecture.md).
+Архитектурные решения:
+- [ADR-0001](docs/adr/0001-pipeline-architecture.md) — устройство конвейера и что показали прогоны;
+- [ADR-0002](docs/adr/0002-models-and-free-tier.md) — выбор модели и работа в лимитах бесплатного тарифа.

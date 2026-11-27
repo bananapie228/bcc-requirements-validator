@@ -8,6 +8,7 @@
 - **Веб-демо:** https://bcc-requirements-validator.streamlit.app/ — пример показывает готовый отчёт v1.0,
   свой файл агент проверяет вживую (бесплатный ключ Gemini, 20 запросов в сутки на модель).
 - **Отчёт по документу кейса:** [reports/report.md](reports/report.md), сделан агентом версии `v1.0`.
+- **Презентация:** [docs/presentation.pdf](docs/presentation.pdf).
 
 ## Быстрый старт
 

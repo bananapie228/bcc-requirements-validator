@@ -64,3 +64,38 @@ pytest -q
 Архитектурные решения:
 - [ADR-0001](docs/adr/0001-pipeline-architecture.md) — устройство конвейера и что показали прогоны;
 - [ADR-0002](docs/adr/0002-models-and-free-tier.md) — выбор модели и работа в лимитах бесплатного тарифа.
+
+## Веб-демо
+
+```bash
+streamlit run app.py
+```
+
+Откроется страница в браузере: загрузите PDF / DOCX / MD / TXT (или возьмите `docs/requirements.md`),
+нажмите «Проверить». Видны этапы конвейера, число нарушений по серьёзности и итог; отчёт можно скачать
+в `.md` и `.json`. Демо вызывает тот же `validator.pipeline.run`, что и CLI, ключ берётся из того же `.env`.
+
+## Оценка качества
+
+`eval/golden.yaml` — 27 эталонных дефектов `docs/requirements.md` из ручного разбора, 5 из них ключевые
+противоречия. `eval/score.py` считает, какую долю нашёл агент (находка засчитывается по номеру строки
+и слову-маркеру).
+
+```bash
+python eval/score.py reports/report.json
+```
+
+Сравнение с бейзлайном «весь документ одним промптом» на той же модели:
+
+```bash
+python eval/baseline.py docs/requirements.md reports/baseline.json
+python eval/score.py reports/report.json reports/baseline.json
+```
+
+Тестовые входы — в `samples/`: тот же документ в PDF и DOCX и второй документ другой предметной области
+(`samples/password-reset.md`), чтобы проверить, что агент не подогнан под один файл:
+
+```bash
+python -m validator samples/requirements.pdf reports/report-pdf.md
+python -m validator samples/password-reset.md reports/report-password-reset.md
+```

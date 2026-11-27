@@ -1,4 +1,5 @@
 """Read an input document (PDF/DOCX/MD/TXT) into lines."""
+import re
 from pathlib import Path
 
 from .models import Document
@@ -8,7 +9,18 @@ def _read_pdf(path: Path) -> str:
     import fitz  # pymupdf
 
     with fitz.open(path) as pdf:
-        return "\n".join(page.get_text() for page in pdf)
+        # sort=True: reading order by position; without it, PDFs that split text into runs
+        # (e.g. exported from Word/LibreOffice) come out with words shuffled across lines
+        text = "\n".join(page.get_text(sort=True) for page in pdf)
+    return _tidy_pdf_text(text)
+
+
+def _tidy_pdf_text(text: str) -> str:
+    """Undo the spaces PDF export puts between text runs, so LLM quotes match the document:
+    "Алматы ." -> "Алматы.", "Ф -2" -> "Ф-2", "версия /дата" -> "версия/дата"."""
+    text = re.sub(r"[ \t]+([.,:;!?)\]»])", r"\1", text)
+    text = re.sub(r"([(\[«])[ \t]+", r"\1", text)
+    return re.sub(r"(?<=\w) ([-/])(?=\w)", r"\1", text)
 
 
 def _read_docx(path: Path) -> str:

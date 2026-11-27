@@ -11,8 +11,10 @@ import streamlit as st
 
 from validator import config, pipeline, report
 from validator.llm import Gemini
+from validator.models import Report
 
 SAMPLE = Path(__file__).parent / "docs" / "requirements.md"
+SUBMITTED = Path(__file__).parent / "reports" / "report.json"
 SEVERITY_RU = {"critical": "критичных", "major": "существенных", "minor": "незначительных"}
 
 st.set_page_config(page_title="Проверка требований", page_icon="📋", layout="wide")
@@ -32,9 +34,17 @@ use_sample = st.toggle(f"Взять пример из репозитория ({S
                        value=uploaded is None)
 
 source_name = uploaded.name if uploaded else (SAMPLE.name if use_sample else None)
-start = st.button("Проверить", type="primary", disabled=not (source_name and config.API_KEY))
+start = st.button("Проверить", type="primary",
+                  disabled=not source_name or (uploaded is not None and not config.API_KEY))
 
-if start:
+if start and not uploaded and SUBMITTED.exists():
+    # the sample shows the submitted v1.0 report: instant, and visitors of a public demo
+    # don't burn the free-tier quota (20 requests/day per model) on a document already checked
+    st.session_state["report"] = Report.model_validate_json(SUBMITTED.read_text(encoding="utf-8"))
+    st.session_state["source"] = SAMPLE.name
+    st.info("Показан отчёт, который агент v1.0 сделал по документу кейса. "
+            "Чтобы прогнать агента вживую, загрузите свой файл.")
+elif start:
     with tempfile.TemporaryDirectory() as tmp:
         if uploaded:
             path = Path(tmp) / uploaded.name  # keep the original name: it goes into the report passport
